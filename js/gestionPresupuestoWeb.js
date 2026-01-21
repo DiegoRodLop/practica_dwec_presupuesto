@@ -113,6 +113,19 @@ function mostrarGastoWeb(idElemento, gasto){
     btnBorrar.addEventListener("click", manejadorBorrar);
     gastoDiv.appendChild(btnBorrar);
 
+    // boton borrar Api
+    const btnBorrarApi = document.createElement("button");
+    btnBorrarApi.type ="button";
+    btnBorrarApi.className ="gasto-borrar-api";
+    btnBorrarApi.textContent = "Borrar (API)";
+
+    //pendiente de terminar
+    const ManejadorBorrarApi = new EditarHandleFormulario();//Esta parte final falta todavia
+    ManejadorBorrarApi.gasto = gasto;
+
+    btnEditarFormulario.addEventListener("click", ManejadorBorrarApi);
+    gastoDiv.appendChild(btnBorrarApi);
+
     // boton editar formulario
     const btnEditarFormulario = document.createElement("button");
     btnEditarFormulario.type ="button";
@@ -547,8 +560,17 @@ function cargarGastoWeb(){
 document.getElementById("cargar-gastos").addEventListener("click", cargarGastoWeb);
 
 function cargarGastosApi(){
-    
+    let usuario = document.getElementById("nombre-usuario").value;
+    let url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/" + usuario;
+
+    fetch(url).then(respuesta => respuesta.json()).then(datos => {
+        gpre.cargarGastos(datos);
+        repintar();
+    }); 
+
 }
+
+document.getElementById("cargar-gastos-api").addEventListener("click", cargarGastosApi);
 
 //Generamos la salida de los componentes
 export{
@@ -568,4 +590,5 @@ export{
     filtrargastoWeb,
     guardarGastosWeb,
     cargarGastoWeb,
+    cargarGastosApi,
 }
