@@ -546,6 +546,10 @@ function cargarGastoWeb(){
 
 document.getElementById("cargar-gastos").addEventListener("click", cargarGastoWeb);
 
+function cargarGastosApi(){
+    
+}
+
 //Generamos la salida de los componentes
 export{
     EditarHandle,
