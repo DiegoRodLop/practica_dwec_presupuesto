@@ -113,17 +113,17 @@ function mostrarGastoWeb(idElemento, gasto){
     btnBorrar.addEventListener("click", manejadorBorrar);
     gastoDiv.appendChild(btnBorrar);
 
-    // boton borrar Api
+    //--- boton borrar Api ---
     const btnBorrarApi = document.createElement("button");
     btnBorrarApi.type ="button";
     btnBorrarApi.className ="gasto-borrar-api";
     btnBorrarApi.textContent = "Borrar (API)";
 
     //pendiente de terminar
-    const ManejadorBorrarApi = new EditarHandleFormulario();//Esta parte final falta todavia
+    const manejadorBorrarApi = new BorrarApiHandle();//Esta parte final falta todavia
     ManejadorBorrarApi.gasto = gasto;
 
-    btnEditarFormulario.addEventListener("click", ManejadorBorrarApi);
+    btnBorrarApi.addEventListener("click", manejadorBorrarApi);
     gastoDiv.appendChild(btnBorrarApi);
 
     // boton editar formulario
@@ -317,6 +317,11 @@ EditarHandle.prototype.handleEvent = function(){
     this.gasto.actualizarFecha(nuevaFecha);
     this.gasto.anyadirEtiquetas(nuevasEtiquetas);
 
+
+    //Practica Comunicacion Asincronica
+    
+
+
     repintar();
 }
 
@@ -358,6 +363,39 @@ function nuevoGastoWebFormulario(){
 
     //me faltaba la d en disabled y por eso no me estaba pasando el test, he cambiado 4 veces el codigo. 
     btnAñadir.setAttribute("disabled", true);
+
+    //Practica comunicacion asincronica
+    var btnEnviarApi = formulario.querySelector(".gasto-enviar-api");
+    btnEnviarApi.addEventListener("click", function(){
+
+        var usuario = document.getElementById("nombre_usuario").value;
+        if(usuario === ""){
+            alert("Introducir nombre de usario");
+            return;
+        }
+
+        var gasto = {
+            descripcion: formulario.descripcion.value,
+            valor: Number(formulario.valor.value),
+            fecha: formulario.fecha.value,
+            etiquetas: formulario.etiquetas.value.split(",").map(e => e.trim())
+        }
+
+        var url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/" + usuario;
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application.json"
+            },
+            body: JSON.stringify(gasto)
+        })
+        .then(function () {
+            formulario.remove();
+            cargarGastosApi();
+        })
+
+    })
 
     document.getElementById("controlesprincipales").appendChild(plantillaFormulario);
 }
@@ -561,6 +599,10 @@ document.getElementById("cargar-gastos").addEventListener("click", cargarGastoWe
 
 function cargarGastosApi(){
     let usuario = document.getElementById("nombre-usuario").value;
+    if(usuario === ""){
+        alert("Introduzca nombre de usuario");
+        return;
+    }
     let url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/" + usuario;
 
     fetch(url).then(respuesta => respuesta.json()).then(datos => {
@@ -572,6 +614,28 @@ function cargarGastosApi(){
 
 document.getElementById("cargar-gastos-api").addEventListener("click", cargarGastosApi);
 
+function BorrarApiHandle(){}
+
+BorrarApiHandle.prototype.handleEvent = function() {
+    var usuario = document.getElementById("nombre_usuario").value;
+    if(usuario === ""){
+        alert("Introduce nombre de usuario");
+        return;
+    }
+
+    var url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/"
+        + usuario + "/" + this.gasto.id;
+
+    fetch(url, {
+        method: "DELETE"
+    })
+
+    .then(function(){
+        cargarGastosApi();
+    })
+
+}
+
 //Generamos la salida de los componentes
 export{
     EditarHandle,
@@ -580,6 +644,7 @@ export{
     SubmitHandle,
     CancelarHandle,
     EditarHandleFormulario,
+    BorrarApiHandle,
     mostrarDatoEnId,
     mostrarGastoWeb,
     mostrarGastosAgrupadosWeb,
