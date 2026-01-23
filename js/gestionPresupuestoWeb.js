@@ -319,7 +319,36 @@ EditarHandle.prototype.handleEvent = function(){
 
 
     //Practica Comunicacion Asincronica
-    
+    btnEnviarApi.addEventListener("click", function(){
+
+        var usuario = document.getElementById("nombre_usuario").value;
+        if(usuario === ""){
+            alert("Introducir nombre de usario");
+            return;
+        }
+
+        var gastoEditado = {
+            descripcion: formulario.descripcion.value,
+            valor: Number(formulario.valor.value),
+            fecha: formulario.fecha.value,
+            etiquetas: formulario.etiquetas.value.split(",").map(e => e.trim())
+        }
+
+        var url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/" + usuario + "/" + this.gasto.id;
+
+        fetch(url, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application.json"
+            },
+            body: JSON.stringify(gastoEditado)
+        })
+        .then(function () {
+            formulario.remove();
+            cargarGastosApi();
+        })
+
+    })
 
 
     repintar();
