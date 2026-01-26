@@ -120,8 +120,8 @@ function mostrarGastoWeb(idElemento, gasto){
     btnBorrarApi.textContent = "Borrar (API)";
 
     //pendiente de terminar
-    const manejadorBorrarApi = new BorrarApiHandle();//Esta parte final falta todavia
-    ManejadorBorrarApi.gasto = gasto;
+    const manejadorBorrarApi = new BorrarApiHandle();
+    manejadorBorrarApi.gasto = gasto;
 
     btnBorrarApi.addEventListener("click", manejadorBorrarApi);
     gastoDiv.appendChild(btnBorrarApi);
@@ -319,9 +319,11 @@ EditarHandle.prototype.handleEvent = function(){
 
 
     //Practica Comunicacion Asincronica
-    btnEnviarApi.addEventListener("click", function(){
+    btnEnviarApi.addEventListener("click", function(event){
 
-        var usuario = document.getElementById("nombre_usuario").value;
+        event.preventDefault();
+
+        var usuario = document.getElementById("nombre-usuario").value;
         if(usuario === ""){
             alert("Introducir nombre de usario");
             return;
@@ -334,12 +336,12 @@ EditarHandle.prototype.handleEvent = function(){
             etiquetas: formulario.etiquetas.value.split(",").map(e => e.trim())
         }
 
-        var url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/" + usuario + "/" + this.gasto.id;
+        var url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/" + usuario + "/" + this.gasto.id + "/" ;
 
         fetch(url, {
             method: "PUT",
             headers: {
-                "Content-Type": "application.json"
+                "Content-Type": "application/json"
             },
             body: JSON.stringify(gastoEditado)
         })
@@ -395,9 +397,11 @@ function nuevoGastoWebFormulario(){
 
     //Practica comunicacion asincronica
     var btnEnviarApi = formulario.querySelector(".gasto-enviar-api");
-    btnEnviarApi.addEventListener("click", function(){
+    btnEnviarApi.addEventListener("click", function(event){
 
-        var usuario = document.getElementById("nombre_usuario").value;
+        event.preventDefault();
+
+        var usuario = document.getElementById("nombre-usuario").value;
         if(usuario === ""){
             alert("Introducir nombre de usario");
             return;
@@ -410,19 +414,25 @@ function nuevoGastoWebFormulario(){
             etiquetas: formulario.etiquetas.value.split(",").map(e => e.trim())
         }
 
-        var url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/" + usuario;
+        var url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/" + usuario + "/";
 
         fetch(url, {
             method: "POST",
             headers: {
-                "Content-Type": "application.json"
+                "Content-Type": "application/json"
             },
             body: JSON.stringify(gasto)
         })
-        .then(function () {
+        .then(res => {
+            console.log("POST status:", res.status);
+            return res.text;
+        })
+        .then(t => {
+            console.log("Respuesta servidor:", t);
             formulario.remove();
             cargarGastosApi();
         })
+        .catch(err => console.error(err));
 
     })
 
@@ -632,11 +642,29 @@ function cargarGastosApi(){
         alert("Introduzca nombre de usuario");
         return;
     }
-    let url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/" + usuario;
+    let url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/" + usuario + "/";
 
-    fetch(url).then(respuesta => respuesta.json()).then(datos => {
-        gpre.cargarGastos(datos);
-        repintar();
+    console.log("Usuario que se envía a la API:", usuario);
+    console.log("URL final:", url);
+
+    fetch(url)
+        //.then(respuesta => respuesta.json())
+        //.then(datos => {
+        //console.log("Datos recibidos:", datos);
+        //gpre.cargarGastos(datos);
+        //repintar();
+
+        .then(respuesta => respuesta.text())
+  .then(texto => {
+      console.log("Texto crudo de la API:", texto);
+      try {
+          const datos = JSON.parse(texto);
+          console.log("JSON parseado:", datos);
+          gpre.cargarGastos(datos);
+          repintar();
+      } catch(e) {
+          console.error("No era JSON válido");
+      }
     }); 
 
 }
@@ -646,7 +674,7 @@ document.getElementById("cargar-gastos-api").addEventListener("click", cargarGas
 function BorrarApiHandle(){}
 
 BorrarApiHandle.prototype.handleEvent = function() {
-    var usuario = document.getElementById("nombre_usuario").value;
+    var usuario = document.getElementById("nombre-usuario").value;
     if(usuario === ""){
         alert("Introduce nombre de usuario");
         return;
