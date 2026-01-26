@@ -146,53 +146,118 @@ function mostrarGastoWeb(idElemento, gasto){
 
 function mostrarGastosAgrupadosWeb(idElemento, agrup, periodo){
     
-    var cont = document.getElementById(idElemento);
-    if(!cont) return;
+//    var cont = document.getElementById(idElemento);
+//    if(!cont) return;
+//
+//
+//    var agrupDiv = document.createElement('div');
+//    agrupDiv.className = 'agrupacion';
 
+//    var h1 = document.createElement('h1');
+//    var periodoTexto = 'periodo';
+//    if(periodo == 'dia'){
+//        periodoTexto = 'día';
+//    }else if(periodo == 'mes'){
+//        periodoTexto = 'mes';
+//    }else if(periodo == 'anyo'){
+//        periodoTexto = 'año';
+//    }
 
-    var agrupDiv = document.createElement('div');
-    agrupDiv.className = 'agrupacion';
+//    h1.textContent = `Gastos agrupados por ${periodoTexto}`;
+//    agrupDiv.appendChild(h1);
 
-    var h1 = document.createElement('h1');
-    var periodoTexto = 'periodo';
-    if(periodo == 'dia'){
-        periodoTexto = 'día';
-    }else if(periodo == 'mes'){
-        periodoTexto = 'mes';
-    }else if(periodo == 'anyo'){
-        periodoTexto = 'año';
-    }
+//    var keys = Object.keys(agrup);
+//    for(var i = 0; i < keys.length; i++){
+//        var key = keys[i];
+//        var val = agrup[key];
 
-    h1.textContent = `Gastos agrupados por ${periodoTexto}`;
-    agrupDiv.appendChild(h1);
+//        var datoDiv = document.createElement('div');
+//        datoDiv.className = 'agrupacion-dato';
 
-    var keys = Object.keys(agrup);
-    for(var i = 0; i < keys.length; i++){
-        var key = keys[i];
-        var val = agrup[key];
-
-        var datoDiv = document.createElement('div');
-        datoDiv.className = 'agrupacion-dato';
-
-        var claveSpan = document.createElement('span');
-        claveSpan.className = 'agrupacion-dato-clave';
-        claveSpan.textContent = key;
-
-        var valorSpan = document.createElement('span');
-        valorSpan.className = 'agrupacion-dato-valor';
-        if(typeof val === 'number'){
-            valorSpan.textContent = val;
-        }else{
-            valorSpan.textContent = String(val);
-        }
+//        var claveSpan = document.createElement('span');
+//        claveSpan.className = 'agrupacion-dato-clave';
+//       claveSpan.textContent = key;
+//
+//        var valorSpan = document.createElement('span');
+//        valorSpan.className = 'agrupacion-dato-valor';
+//        if(typeof val === 'number'){
+ //           valorSpan.textContent = val;
+  //      }else{
+//            valorSpan.textContent = String(val);
+//        }
         
-        datoDiv.appendChild(claveSpan);
-        datoDiv.appendChild(valorSpan);
+//        datoDiv.appendChild(claveSpan);
+//        datoDiv.appendChild(valorSpan);
 
-        agrupDiv.appendChild(datoDiv);
-    }
+//        agrupDiv.appendChild(datoDiv);
+//    }
 
-    cont.appendChild(agrupDiv);
+//    cont.appendChild(agrupDiv);
+
+        var divP = document.getElementById(idElemento);
+        // Borrar el contenido de la capa para que no se duplique el contenido al repintar
+        divP.innerHTML = "";
+
+
+        // Estilos
+        divP.style.width = "33%";
+        divP.style.display = "inline-block";
+        // Crear elemento <canvas> necesario para crear la gráfica
+        // https://www.chartjs.org/docs/latest/getting-started/
+        let chart = document.createElement("canvas");
+        // Variable para indicar a la gráfica el período temporal del eje X
+        // En función de la variable "periodo" se creará la variable "unit" (anyo -> year; mes -> month; dia -> day)
+        let unit = "";
+        switch (periodo) {
+        case "anyo":
+            unit = "year";
+            break;
+        case "mes":
+            unit = "month";
+            break;
+        case "dia":
+        default:
+            unit = "day";
+            break;
+        }
+
+        // Creación de la gráfica
+        // La función "Chart" está disponible porque hemos incluido las etiquetas <script> correspondientes en el fichero HTML
+        const myChart = new Chart(chart.getContext("2d"), {
+            // Tipo de gráfica: barras. Puedes cambiar el tipo si quieres hacer pruebas: https://www.chartjs.org/docs/latest/charts/line.html
+            type: 'bar',
+            data: {
+                datasets: [
+                    {
+                        // Título de la gráfica
+                        label: `Gastos por ${periodo}`,
+                        // Color de fondo
+                        backgroundColor: "#555555",
+                        // Datos de la gráfica
+                        // "agrup" contiene los datos a representar. Es uno de los parámetros de la función "mostrarGastosAgrupadosWeb".
+                        data: agrup
+                    }
+                ],
+            },
+            options: {
+                scales: {
+                    x: {
+                        // El eje X es de tipo temporal
+                        type: 'time',
+                        time: {
+                            // Indicamos la unidad correspondiente en función de si utilizamos días, meses o años
+                            unit: unit
+                        }
+                    },
+                    y: {
+                        // Para que el eje Y empieza en 0
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        // Añadimos la gráfica a la capa
+        divP.append(chart);
 
 }
 
@@ -648,23 +713,23 @@ function cargarGastosApi(){
     console.log("URL final:", url);
 
     fetch(url)
-        //.then(respuesta => respuesta.json())
-        //.then(datos => {
-        //console.log("Datos recibidos:", datos);
-        //gpre.cargarGastos(datos);
-        //repintar();
+        .then(respuesta => respuesta.json())
+        .then(datos => {
+        console.log("Datos recibidos:", datos);
+        gpre.cargarGastos(datos);
+        repintar();
 
-        .then(respuesta => respuesta.text())
-  .then(texto => {
-      console.log("Texto crudo de la API:", texto);
-      try {
-          const datos = JSON.parse(texto);
-          console.log("JSON parseado:", datos);
-          gpre.cargarGastos(datos);
-          repintar();
-      } catch(e) {
-          console.error("No era JSON válido");
-      }
+        //.then(respuesta => respuesta.text())
+  //.then(texto => {
+    //  console.log("Texto crudo de la API:", texto);
+      //try {
+        //  const datos = JSON.parse(texto);
+         // console.log("JSON parseado:", datos);
+         // gpre.cargarGastos(datos);
+         // repintar();
+      //} catch(e) {
+        //  console.error("No era JSON válido");
+      //}
     }); 
 
 }
