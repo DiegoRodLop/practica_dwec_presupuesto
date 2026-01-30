@@ -382,42 +382,6 @@ EditarHandle.prototype.handleEvent = function(){
     this.gasto.actualizarFecha(nuevaFecha);
     this.gasto.anyadirEtiquetas(nuevasEtiquetas);
 
-
-    //Practica Comunicacion Asincronica
-    btnEnviarApi.addEventListener("click", function(event){
-
-        event.preventDefault();
-
-        var usuario = document.getElementById("nombre-usuario").value;
-        if(usuario === ""){
-            alert("Introducir nombre de usario");
-            return;
-        }
-
-        var gastoEditado = {
-            descripcion: formulario.descripcion.value,
-            valor: Number(formulario.valor.value),
-            fecha: formulario.fecha.value,
-            etiquetas: formulario.etiquetas.value.split(",").map(e => e.trim())
-        }
-
-        var url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/" + usuario + "/" + this.gasto.id + "/" ;
-
-        fetch(url, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(gastoEditado)
-        })
-        .then(function () {
-            formulario.remove();
-            cargarGastosApi();
-        })
-
-    })
-
-
     repintar();
 }
 
@@ -598,6 +562,58 @@ EditarHandleFormulario.prototype.handleEvent = function(evento){
         repintar();
     });
 
+
+    
+    //correcion de la practica asincronica, lo tenia mal ubicado y mal puesto
+    function enviarApiEditarHandle(){}
+
+    enviarApiEditarHandle.prototype.handleEvent = function(event){
+        event.preventDefault();
+
+        let usuario = document.getElementById("nombre-usuario").value;
+        if(usuario === ""){
+            alert("Introducir nombre de usuario");
+            return;
+        }
+
+        let form = this.formulario;
+
+        let gastoEditado = {
+            descripcion: formulario.descripcion.value,
+            valor: Number(formulario.valor.value),
+            fecha: formulario.fecha.value,
+            etiquetas: formulario.etiquetas.value.split(",").map(e => e.trim()),
+            usuario: usuario
+        }
+
+        var url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/" + usuario + "/" + this.gasto.gastoId;
+
+        console.log("PUT URL:", url);
+        console.log("PUT BODY:", gastoEditado);
+
+        fetch(url, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(gastoEditado)
+        })
+        .then(() => {
+            //console.log("Respuest PUT:", txt)
+            formulario.remove();
+            cargarGastosApi();
+        })
+
+        .catch(err => console.error("Error en PUT:", err));
+    }
+
+    let btnEnviarApi = formulario.querySelector(".gasto-enviar-api");
+    let manejadorApi = new enviarApiEditarHandle();
+    manejadorApi.gasto = this.gasto;
+    manejadorApi.formulario = formulario;
+    
+    btnEnviarApi.addEventListener("click", manejadorApi);
+
     contenedorGasto.appendChild(plantilla);
 
     botonEditarFormulario.setAttribute("disabled", true);
@@ -746,7 +762,7 @@ BorrarApiHandle.prototype.handleEvent = function() {
     }
 
     var url = "https://suhhtqjccd.execute-api.eu-west-1.amazonaws.com/latest/"
-        + usuario + "/" + this.gasto.id;
+        + usuario + "/" + this.gasto.gastoId;
 
     fetch(url, {
         method: "DELETE"
